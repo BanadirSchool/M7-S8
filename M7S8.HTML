@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>M7 & S8 | 15-maalin Qorshe - LocalStorage Full App</title>
+    <!-- Chart.js CDN for beautiful charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Font Awesome 6 (free icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, 'Inter', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 30% 10%, #0a0f2a, #030617);
+            color: #f0eef7;
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e1b3c; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #ff69b4; border-radius: 10px; }
+
+        .app-container {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #11143f, #0b0e2c);
+            border-radius: 2rem;
+            padding: 1.8rem 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 105, 180, 0.3);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(120deg, #FFB6C1, #FF69B4, #9b87f5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .sub {
+            color: #b9c3ff;
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .badge {
+            background: #ff69b430;
+            backdrop-filter: blur(4px);
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            border: 1px solid #ff69b4;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #2a2c5a;
+            padding-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #ccd6ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn.active {
+            background: #ff69b4;
+            color: #0a0b1e;
+            box-shadow: 0 6px 14px #ff69b460;
+        }
+        .page {
+            display: none;
+            animation: fade 0.3s ease;
+        }
+        .page.active-page {
+            display: block;
+        }
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(8px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 1.8rem;
+        }
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            body { padding: 1rem; }
+        }
+
+        .card {
+            background: rgba(12, 16, 48, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 1.8rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 105, 180, 0.25);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.2rem;
+            border-left: 5px solid #ff69b4;
+            padding-left: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .day-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            margin-bottom: 1.5rem;
+        }
+        .day-btn {
+            background: #1e2152;
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.1s;
+        }
+        .day-btn.active-day {
+            background: #ff69b4;
+            color: #0b0e2a;
+            box-shadow: 0 0 8px #ff69b4;
+        }
+        .plan-text {
+            background: #05081c;
+            padding: 1.2rem;
+            border-radius: 1.2rem;
+            line-height: 1.5;
+            margin-bottom: 1.2rem;
+        }
+        textarea, input {
+            background: #02041c;
+            border: 1px solid #ff69b4;
+            color: white;
+            border-radius: 1rem;
+            padding: 0.6rem 1rem;
+            width: 100%;
+            resize: vertical;
+        }
+        button {
+            background: #ff69b4;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #010018;
+        }
+        button:hover {
+            background: #ff8ac9;
+            transform: scale(0.98);
+        }
+        .questions-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+        .questions-list li {
+            background: #11143f;
+            margin: 0.6rem 0;
+            padding: 0.7rem;
+            border-radius: 1rem;
+            border-left: 4px solid #ff69b4;
+        }
+        .chart-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        .chart-card {
+            background: #0a0d30cc;
+            border-radius: 1.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .rating-slider {
+            margin-top: 1rem;
+            background: #10133f;
+            padding: 1rem;
+            border-radius: 1.2rem;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: #8d94d4;
+        }
+        /* ========= QEYBTA 4: NOTE DESIGN QURXOON ========= */
+        .notes-section {
+            margin-top: 2rem;
+        }
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        .note-card {
+            background: linear-gradient(145deg, #0f1348, #080b30);
+            border-radius: 1.8rem;
+            padding: 1.2rem;
+            border: 1px solid rgba(255, 105, 180, 0.5);
+            transition: all 0.25s ease;
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.5);
+        }
+        .note-card:hover {
+            transform: translateY(-5px);
+            border-color: #ff69b4;
+            box-shadow: 0 18px 30px -8px #ff69b450;
+        }
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px dashed #ff69b480;
+            padding-bottom: 0.6rem;
+        }
+        .note-day {
+            font-size: 1.3rem;
+            font-weight: bold;
+            background: #ff69b420;
+            padding: 0.2rem 1rem;
+            border-radius: 30px;
+            backdrop-filter: blur(2px);
+        }
+        .note-actions i {
+            font-size: 1.2rem;
+            margin-left: 0.6rem;
+            cursor: pointer;
+            color: #ffb7db;
+            transition: 0.2s;
+        }
+        .note-actions i:hover { color: #ff69b4; transform: scale(1.1); }
+        .note-content {
+            margin: 0.8rem 0;
+        }
+        .note-content textarea {
+            background: #01021c;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+            min-height: 100px;
+            border-color: #ff69b460;
+        }
+        .note-preview {
+            background: #00000030;
+            padding: 0.8rem;
+            border-radius: 1rem;
+            font-style: italic;
+            color: #cdd4ff;
+            min-height: 85px;
+            white-space: pre-wrap;
+        }
+        .note-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.5rem;
+        }
+        .save-note-btn {
+            background: #7c3aed;
+            font-size: 0.8rem;
+            padding: 0.3rem 1rem;
+        }
+        .save-note-btn:hover { background: #9b5eff; }
+        .empty-notes {
+            text-align: center;
+            padding: 2rem;
+            color: #a29eff;
+        }
+        .add-all-notes {
+            background: #2d327c;
+            margin-bottom: 1rem;
+        }
+        .toast-msg {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #ff69b4;
+            color: #0a0b1e;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            z-index: 1000;
+            animation: fadeOut 2s ease forwards;
+        }
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translateY(0); }
+            70% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="hero">
+        <h1>📚 M7 & S8 · 15-Maalin Isku Diyaarin + LocalStorage</h1>
+        <div class="sub">
+            <span>🌍 Dhammaan xogta waxay ku kaydsan tahay browser-kaaga (LocalStorage)</span>
+            <span class="badge"><i class="fas fa-database"></i> 100% LocalStorage | 4 Qeybood</span>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-page="planner"><i class="fas fa-calendar-alt"></i> QEYBTA 1: Qorshe & Su'aalo</button>
+        <button class="tab-btn" data-page="log"><i class="fas fa-archive"></i> QEYBTA 2: Diiwaanka</button>
+        <button class="tab-btn" data-page="insight"><i class="fas fa-chart-line"></i> QEYBTA 3: Charts</button>
+        <button class="tab-btn" data-page="notes"><i class="fas fa-pen-fancy"></i> QEYBTA 4: Notes · Qurux</button>
+    </div>
+
+    <!-- PAGE 1: 15-Day Plan & Questions -->
+    <div id="plannerPage" class="page active-page">
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2><i class="fas fa-book-open"></i> 15 maalin · Qorshe & Caqabado</h2>
+                <div class="day-selector" id="daySelector"></div>
+                <div id="dailyPlanDisplay" class="plan-text"></div>
+                <div class="challenge-area">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Caqabadaha maalinta</h3>
+                    <div id="challengeDisplay">💬 Qor waxaad la kulantay caqabad...</div>
+                    <textarea id="challengeInput" rows="2" placeholder="Tusaale: Maanta waan daalay, su'aal adag..."></textarea>
+                    <button id="saveChallengeBtn" style="margin-top:8px"><i class="fas fa-save"></i> Kaydi Caqabadda</button>
+                </div>
+            </div>
+            <div class="card">
+                <h2><i class="fas fa-question-circle"></i> 10 Su'aal & Qiimeynta Maskaxda</h2>
+                <div class="flex-between">
+                    <strong>Maalinta: <span id="activeDayLabel">1</span></strong>
+                    <span id="questionCounter">0/10 su'aal</span>
+                </div>
+                <div style="margin: 1rem 0;">
+                    <textarea id="newQuestion" rows="2" placeholder="Su'aasha: Maxaa ku adkaaday? Fahamkee?..."></textarea>
+                    <button id="addQuestionBtn" style="margin-top: 8px"><i class="fas fa-plus-circle"></i> Ku dar su'aal</button>
+                </div>
+                <div>
+                    <h3>📋 Su'aalaha maalintan</h3>
+                    <ul id="questionsListDay" class="questions-list"></ul>
+                </div>
+                <div class="rating-slider">
+                    <label><i class="fas fa-brain"></i> Intee in le'eg ayay su'aalahaagu u kobciyaan maskaxda? (1-10)</label>
+                    <input type="range" id="cognitiveRating" min="1" max="10" step="1" value="5">
+                    <div class="flex-between"><span>Daciif</span><span>Dhexe</span><span>Horumari weyn</span></div>
+                    <button id="saveCognitiveBtn" style="margin-top: 8px; background:#7c3aed;"><i class="fas fa-chart-simple"></i> Kaydi Qiimeynta Maskaxda</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 2: History -->
+    <div id="logPage" class="page">
+        <div class="card">
+            <h2><i class="fas fa-history"></i> Diiwaanka guud & Faahfaahin</h2>
+            <div class="day-selector" id="historyDaySelector"></div>
+            <div id="historyDetail" style="background:#0a0d2c; border-radius:1.2rem; padding:1.2rem;"></div>
+        </div>
+        <div class="card">
+            <h2><i class="fas fa-database"></i> Liiska buuxa 15 maalin</h2>
+            <div id="fullArchiveList" class="xogtayda-container"></div>
+        </div>
+    </div>
+
+    <!-- PAGE 3: CHARTS -->
+    <div id="insightPage" class="page">
+        <div class="card">
+            <h2><i class="fas fa-chart-pie"></i> QEYBTA 3: Charts Quruxoon · Horumar & Koboc</h2>
+            <div class="chart-row">
+                <div class="chart-card"><h3>✅ Wax qabtay vs Waxba qaban</h3><canvas id="completionChart"></canvas><p class="progress-note">Maalin kasta haddii su'aal ama caqabad kaydsan</p></div>
+                <div class="chart-card"><h3>📈 Boqolkiiba Waxbarasho</h3><canvas id="learningProgressChart"></canvas><p class="progress-note">Ku salaysan su'aalaha, caqabada & qiimeynta</p></div>
+                <div class="chart-card"><h3>🧠 Kobcinta Maskaxda (1-10)</h3><canvas id="cognitiveGrowthChart"></canvas><p class="progress-note">Qiimeynta adiga oo isku dhiirrigeliya</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 4: NOTES DESIGN QURXOON (Qeybta 4) -->
+    <div id="notesPage" class="page">
+        <div class="card">
+            <h2><i class="fas fa-paintbrush-pencil"></i> QEYBTA 4: Qoraalo gaar ah · Notes Design</h2>
+            <p style="margin-bottom: 1rem;">Halkan waxaad ku qori kartaa qoraalo qurux badan, faallooyin maalinle ah, fikrado dheeri ah. Design qurux badan oo midabbo pink & dark blue ah. <strong>Dhammaan waxaa lagu kaydiyaa LocalStorage</strong></p>
+            <div id="notesContainer" class="notes-grid">
+                <!-- dynamic notes cards for each day 1-15 -->
+            </div>
+            <div style="text-align: center; margin-top: 1rem;">
+                <button id="refreshNotesBtn" style="background: #5a3ca0;"><i class="fas fa-sync-alt"></i> Cusbooneysii Notes</button>
+                <button id="clearAllStorageBtn" style="background: #8b2c5d; margin-left:10px;"><i class="fas fa-trash-alt"></i> Tirtir dhammaan xogta (Storage)</button>
+            </div>
+        </div>
+    </div>
+
+    <footer><i class="fas fa-moon"></i> M7 & S8 · Dhammaan xogta waxay ku kaydsan tahay LocalStorage | Qeybta 4 Notes qurux badan</footer>
+</div>
+
+<script>
+    // ========== DATA STRUCTURE (full localStorage) ==========
+    let appData = {
+        dailyData: {},   // key: "1" => { challenges, questions, cognitiveRating, noteText }
+    };
+
+    const defaultPlans = {
+        1:"🌟 Maalin 1: Aqoonsiga mawduucyada & samee jadwal.",
+        2:"📘 Maalin 2: Dib u eegis Qormo iyo xisaab.",
+        3:"🧠 Maalin 3: Xooji daciifnimada.",
+        4:"✍️ Maalin 4: Qoraal kooban oo 3 qaybood.",
+        5:"📚 Maalin 5: Akhri casharro cusub.",
+        6:"🎯 Maalin 6: Ku celi + imtixaan yar.",
+        7:"🔄 Maalin 7: Wada sheekeysi iyo su'aalo.",
+        8:"📝 Maalin 8: Qor 5 faa'iido.",
+        9:"💡 Maalin 9: Xali mashaariq adag.",
+        10:"🎤 Maalin 10: Soo jeedi 3 fikradood.",
+        11:"⚡ Maalin 11: Dib u eeg qaladaadka.",
+        12:"🧪 Maalin 12: Imtixaan is-diyaarin.",
+        13:"📌 Maalin 13: Falanqaynta imtixaanka.",
+        14:"🚀 Maalin 14: Xooji xirfadaha.",
+        15:"🏆 Maalin 15: Dib-u-eegis guud."
+    };
+
+    function showToast(msg) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-msg';
+        toast.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    }
+
+    function loadFromStorage() {
+        const stored = localStorage.getItem("M7_S8_FULL_APP_V4");
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                if (parsed.dailyData) appData.dailyData = parsed.dailyData;
+            } catch(e) { console.warn(e); }
+        }
+        // Initialize days 1-15 with default structure
+        for (let i=1; i<=15; i++) {
+            let key = i.toString();
+            if (!appData.dailyData[key]) {
+                appData.dailyData[key] = { challenges: "", questions: [], cognitiveRating: 5, noteText: "" };
+            } else {
+                if (appData.dailyData[key].cognitiveRating === undefined) appData.dailyData[key].cognitiveRating = 5;
+                if (!appData.dailyData[key].questions) appData.dailyData[key].questions = [];
+                if (appData.dailyData[key].challenges === undefined) appData.dailyData[key].challenges = "";
+                if (appData.dailyData[key].noteText === undefined) appData.dailyData[key].noteText = "";
+            }
+        }
+        saveToStorage();
+    }
+    
+    function saveToStorage() { 
+        localStorage.setItem("M7_S8_FULL_APP_V4", JSON.stringify({ dailyData: appData.dailyData })); 
+    }
+
+    let currentDay = 1;
+
+    // render day selector and planner UI
+    function renderDaySelector() {
+        const container = document.getElementById("daySelector");
+        if (!container) return;
+        container.innerHTML = "";
+        for (let i=1; i<=15; i++) {
+            const btn = document.createElement("button");
+            btn.textContent = `📆 Maalin ${i}`;
+            btn.classList.add("day-btn");
+            if (currentDay === i) btn.classList.add("active-day");
+            btn.addEventListener("click", () => {
+                currentDay = i;
+                refreshAllPlannerUI();
+                renderDaySelector();
+                document.getElementById("activeDayLabel").innerText = currentDay;
+                updateQuestionCounter();
+                loadCognitiveSlider();
+            });
+            container.appendChild(btn);
+        }
+    }
+    
+    function loadCognitiveSlider() { 
+        const slider = document.getElementById("cognitiveRating"); 
+        if(slider) slider.value = appData.dailyData[currentDay.toString()]?.cognitiveRating || 5; 
+    }
+    
+    function refreshAllPlannerUI() {
+        const planDiv = document.getElementById("dailyPlanDisplay");
+        if(planDiv) planDiv.innerHTML = `<strong>📌 Qorshaha maalinta ${currentDay}:</strong><br>${defaultPlans[currentDay]}`;
+        const dayData = appData.dailyData[currentDay.toString()];
+        document.getElementById("challengeInput").value = dayData?.challenges || "";
+        document.getElementById("challengeDisplay").innerHTML = dayData?.challenges ? `⚠️ Caqabadda: "${dayData.challenges}"` : "💬 Ma jiraan caqabado la qoray.";
+        renderQuestionsForDay(currentDay);
+        document.getElementById("activeDayLabel").innerText = currentDay;
+        updateQuestionCounter();
+        loadCognitiveSlider();
+    }
+    
+    function renderQuestionsForDay(day) {
+        const questions = appData.dailyData[day.toString()]?.questions || [];
+        const ul = document.getElementById("questionsListDay");
+        if(!ul) return;
+        if(questions.length===0) { ul.innerHTML = "<li>📭 Ma jirto su'aal, ku dar kore.</li>"; return; }
+        ul.innerHTML = questions.map((q,i)=>`<li>${i+1}. ${escapeHtml(q)}</li>`).join("");
+    }
+    
+    function updateQuestionCounter() {
+        const count = appData.dailyData[currentDay.toString()]?.questions?.length || 0;
+        document.getElementById("questionCounter").innerText = `${count}/10 su'aal`;
+        const addBtn = document.getElementById("addQuestionBtn");
+        if(addBtn) addBtn.disabled = count >= 10;
+    }
+    
+    function escapeHtml(str) { if(!str) return ""; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+    function saveCurrentChallenge() { 
+        let val = document.getElementById("challengeInput").value.trim();
+        appData.dailyData[currentDay.toString()].challenges = val;
+        saveToStorage(); refreshAllPlannerUI(); updateAllCharts(); showToast("✅ Caqabad waa la kaydiyay!"); 
+    }
+    
+    function addCurrentQuestion() {
+        let qText = document.getElementById("newQuestion").value.trim();
+        if(!qText) { alert("Fadlan qor su'aal."); return; }
+        let questionsArr = appData.dailyData[currentDay.toString()].questions;
+        if(questionsArr.length >= 10) { alert("10 su'aal waa la gaadhay."); return; }
+        questionsArr.push(qText);
+        saveToStorage(); document.getElementById("newQuestion").value = "";
+        renderQuestionsForDay(currentDay); updateQuestionCounter(); updateAllCharts(); showToast("➕ Su'aal lagu daray!");
+    }
+    
+    function saveCognitiveRating() {
+        let rating = parseInt(document.getElementById("cognitiveRating").value);
+        appData.dailyData[currentDay.toString()].cognitiveRating = rating;
+        saveToStorage(); updateAllCharts(); showToast(`🧠 Qiimeynta maskaxda = ${rating}/10`);
+    }
+
+    // ========== CHARTS ==========
+    let completionChart, learningChart, cognitiveChart;
+    
+    function computeMetrics() {
+        let daysActive=0, totalQ=0, totalChal=0, sumCog=0, cogCount=0;
+        for(let i=1;i<=15;i++) {
+            let d = appData.dailyData[i.toString()];
+            if(d) {
+                if((d.questions?.length>0) || (d.challenges?.trim().length>0)) daysActive++;
+                totalQ += d.questions?.length||0;
+                if(d.challenges?.trim()) totalChal++;
+                if(d.cognitiveRating) { sumCog+=d.cognitiveRating; cogCount++; }
+            }
+        }
+        let avgCog = cogCount ? sumCog/cogCount : 5;
+        let progress = Math.min(100, Math.max(0, ((totalQ/150)*70) + ((totalChal/15)*15) + (((avgCog-1)/9)*15)));
+        return { daysActive, progress, avgCog };
+    }
+    
+    function getCognitivePerDay() { let arr=[]; for(let i=1;i<=15;i++) arr.push(appData.dailyData[i.toString()]?.cognitiveRating||5); return arr; }
+    function getCompletionData() { let did=0; for(let i=1;i<=15;i++) { let d=appData.dailyData[i.toString()]; if(d && ((d.questions?.length>0)||(d.challenges?.trim().length>0))) did++; } return [did, 15-did]; }
+    
+    function updateAllCharts() {
+        const [did, notDid] = getCompletionData();
+        if(completionChart) completionChart.destroy();
+        const ctx1 = document.getElementById('completionChart');
+        if(ctx1) completionChart = new Chart(ctx1, { type:'doughnut', data:{ labels:['✅ Wax qabtay','❌ Waxba qaban'], datasets:[{ data:[did,notDid], backgroundColor:['#ff69b4','#2a2e6e'] }] }, options:{ responsive:true, plugins:{legend:{labels:{color:'#fff'}}}} });
+        
+        let prog = computeMetrics().progress;
+        const ctx2 = document.getElementById('learningProgressChart');
+        if(ctx2) {
+            if(learningChart) learningChart.destroy();
+            learningChart = new Chart(ctx2, { type:'doughnut', data:{ labels:['Waxbarasho','Kaharo'], datasets:[{ data:[prog,100-prog], backgroundColor:['#3b82f6','#1e1f4a'] }] }, options:{ responsive:true, plugins:{tooltip:{callbacks:{label:(ctx)=>`${ctx.label}: ${ctx.raw.toFixed(1)}%`}} } } });
+        }
+        
+        let cogVals = getCognitivePerDay();
+        const ctx3 = document.getElementById('cognitiveGrowthChart');
+        if(ctx3) {
+            if(cognitiveChart) cognitiveChart.destroy();
+            cognitiveChart = new Chart(ctx3, { type:'line', data:{ labels:Array.from({length:15},(_,i)=>`M${i+1}`), datasets:[{ label:'Heerka Kobcinta Maskaxda', data:cogVals, borderColor:'#ff69b4', backgroundColor:'#ff69b430', fill:true, tension:0.2, pointBackgroundColor:'#ffb3d9' }] }, options:{ scales:{ y:{ min:1,max:10, title:{ display:true, text:'Qiimeyn 1-10', color:'#ddd' } }, x:{ ticks:{ color:'#ccc' } } }, responsive:true } });
+        }
+    }
+
+    // ========== HISTORY PAGE ==========
+    function renderHistoryPage() {
+        let container = document.getElementById("historyDaySelector"); if(!container) return;
+        container.innerHTML = "";
+        for(let i=1;i<=15;i++) {
+            let btn = document.createElement("button"); btn.textContent = `📌 Maalin ${i}`; btn.classList.add("day-btn");
+            btn.addEventListener("click", () => { showHistoryDetail(i); document.querySelectorAll("#historyDaySelector .day-btn").forEach(b=>b.classList.remove("active-day")); btn.classList.add("active-day"); });
+            container.appendChild(btn);
+        }
+        showHistoryDetail(1); renderFullArchive();
+    }
+    
+    function showHistoryDetail(day) {
+        let key=day.toString(), data=appData.dailyData[key]||{ challenges:"", questions:[], cognitiveRating:5, noteText:"" };
+        let plan=defaultPlans[day];
+        let qHtml = data.questions?.length ? `<ul>${data.questions.map(q=>`<li>${escapeHtml(q)}</li>`).join("")}</ul>` : "<i>Ma jiraan su'aalo</i>";
+        let notePreview = data.noteText ? `<p><strong><i class='fas fa-sticky-note'></i> Qoraalka:</strong> ${escapeHtml(data.noteText.substring(0,100))}${data.noteText.length>100?'...':''}</p>` : "";
+        let html = `<div><h3>Maalin ${day}</h3><p><strong>Qorshe:</strong> ${plan}</p><p><strong>⚠️ Caqabad:</strong> ${escapeHtml(data.challenges||"Lama qorin")}</p><p><strong>🧠 Qiimeynta maskaxda:</strong> ${data.cognitiveRating||5}/10</p>${notePreview}<p><strong>❓ Su'aalaha (${data.questions?.length||0}):</strong> ${qHtml}</p><button id="clearDayHistoryBtn" data-day="${day}" style="background:#632c4a;"><i class="fas fa-trash"></i> Tirtir su'aalaha maalintan</button></div>`;
+        document.getElementById("historyDetail").innerHTML = html;
+        let clearBtn = document.getElementById("clearDayHistoryBtn");
+        if(clearBtn) clearBtn.addEventListener("click",()=>{ if(confirm(`Tirtir su'aalaha maalinta ${day}?`)) { appData.dailyData[day.toString()].questions=[]; saveToStorage(); showHistoryDetail(day); renderFullArchive(); if(currentDay===day) renderQuestionsForDay(currentDay); updateAllCharts(); showToast("Su'aalaha waa la tirtiray"); } });
+    }
+    
+    function renderFullArchive() {
+        let div=document.getElementById("fullArchiveList"); if(!div) return;
+        let html="";
+        for(let d=1;d<=15;d++) {
+            let data=appData.dailyData[d.toString()];
+            let qCount=data?.questions?.length||0;
+            let cog=data?.cognitiveRating||5;
+            let hasNote = data?.noteText ? "📝" : "";
+            html+=`<div style="background:#0e123e; border-radius:1rem; margin-bottom:0.8rem; padding:0.8rem;"><strong>Maalin ${d}</strong> ${hasNote} 🧠 ${cog}/10 | ${qCount} su'aal<br><span>⚠️ ${escapeHtml((data?.challenges||"").substring(0,60))}</span></div>`;
+        }
+        div.innerHTML=html||"<i>Wax kayd ah ma jiro</i>";
+    }
+
+    // ========== QEYBTA 4: NOTES DESIGN (LocalStorage) ==========
+    function renderNotesSection() {
+        const container = document.getElementById("notesContainer");
+        if (!container) return;
+        let notesHtml = "";
+        for (let i=1; i<=15; i++) {
+            const key = i.toString();
+            const noteText = appData.dailyData[key]?.noteText || "";
+            notesHtml += `
+                <div class="note-card" data-day="${i}">
+                    <div class="note-header">
+                        <span class="note-day"><i class="fas fa-calendar-day"></i> Maalin ${i}</span>
+                        <div class="note-actions">
+                            <i class="fas fa-expand-arrows-alt expand-note" style="cursor:pointer;" title="Muuji/qari textarea"></i>
+                        </div>
+                    </div>
+                    <div class="note-content">
+                        <textarea class="note-textarea" data-day="${i}" rows="3" placeholder="Qor qoraal muhiim ah, feker, cilmi-baaris ama soo koobid... ✍️">${escapeHtml(noteText)}</textarea>
+                        <div class="note-footer">
+                            <button class="save-note-btn" data-day="${i}"><i class="fas fa-save"></i> Kaydi Qoraalka</button>
+                        </div>
+                        <div class="note-preview" id="preview-${i}">${noteText ? escapeHtml(noteText.substring(0,80)) + (noteText.length>80?"...":"") : "<i class='fas fa-feather-alt'></i> Qoraal weli ma jiro, ku qor kore."}</div>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = notesHtml;
+        
+        document.querySelectorAll(".save-note-btn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const day = parseInt(btn.getAttribute("data-day"));
+                const textarea = document.querySelector(`.note-textarea[data-day="${day}"]`);
+                if (textarea) {
+                    const newNote = textarea.value;
+                    appData.dailyData[day.toString()].noteText = newNote;
+                    saveToStorage();
+                    const previewDiv = document.getElementById(`preview-${day}`);
+                    if (previewDiv) previewDiv.innerText = newNote ? (newNote.substring(0,80)+(newNote.length>80?"...":"")) : "✏️ Qoraal cusub, diyaar u qor.";
+                    showToast(`📝 Qoraalka maalinta ${day} waa la kaydiyay!`);
+                    updateAllCharts();
+                }
+            });
+        });
+        
+        document.querySelectorAll(".expand-note").forEach(icon => {
+            icon.addEventListener("click", (e) => {
+                const parentCard = icon.closest(".note-card");
+                const textarea = parentCard.querySelector(".note-textarea");
+                if(textarea) {
+                    if(textarea.rows === 3) textarea.rows = 6;
+                    else textarea.rows = 3;
+                }
+            });
+        });
+    }
+    
+    function clearAllStorage() {
+        if(confirm("Miyaad hubtaa inaad tirtirto dhammaan xogta? (Su'aalaha, caqabadaha, notes, qiimeynta) Tani waa mid aan laga noqon karin.")) {
+            localStorage.removeItem("M7_S8_FULL_APP_V4");
+            loadFromStorage();  // reinitialize with empty data
+            // Refresh all UI
+            renderDaySelector();
+            refreshAllPlannerUI();
+            renderHistoryPage();
+            updateAllCharts();
+            renderNotesSection();
+            showToast("🗑️ Dhammaan xogta waa la tirtiray! Hadda waa bilaash.");
+        }
+    }
+
+    // tabs + initialization
+    function initTabs() {
+        const btns = document.querySelectorAll(".tab-btn");
+        const pages = { planner: document.getElementById("plannerPage"), log: document.getElementById("logPage"), insight: document.getElementById("insightPage"), notes: document.getElementById("notesPage") };
+        btns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const pageId = btn.getAttribute("data-page");
+                btns.forEach(b=>b.classList.remove("active"));
+                btn.classList.add("active");
+                Object.keys(pages).forEach(p=>pages[p].classList.remove("active-page"));
+                pages[pageId].classList.add("active-page");
+                if(pageId === "log") renderHistoryPage();
+                if(pageId === "insight") updateAllCharts();
+                if(pageId === "notes") renderNotesSection();
+            });
+        });
+    }
+
+    function bindEvents() {
+        document.getElementById("saveChallengeBtn")?.addEventListener("click", saveCurrentChallenge);
+        document.getElementById("addQuestionBtn")?.addEventListener("click", addCurrentQuestion);
+        document.getElementById("saveCognitiveBtn")?.addEventListener("click", saveCognitiveRating);
+        document.getElementById("refreshNotesBtn")?.addEventListener("click", () => renderNotesSection());
+        document.getElementById("clearAllStorageBtn")?.addEventListener("click", clearAllStorage);
+    }
+
+    function init() {
+        loadFromStorage();
+        renderDaySelector();
+        refreshAllPlannerUI();
+        bindEvents();
+        initTabs();
+        renderHistoryPage();
+        updateAllCharts();
+    }
+    init();
+</script>
+</body>
+</html>
